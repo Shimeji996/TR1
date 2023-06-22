@@ -6,7 +6,7 @@ Fade::~Fade() {}
 
 void Fade::Initialize()
 {
-	m_color = 0xFFFFFF00;		// 色
+	m_color = 0x00000000;		// 色
 	m_alpha = 0x00000000;		// 透明度
 	m_time = 60;				// 現在の時間
 	m_bIsFadeIn = false;		// 点灯中か
