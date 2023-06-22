@@ -435,8 +435,6 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 		/// ↓更新処理ここから
 		///
 
-		const int move = 10;
-
 		if (keys[DIK_SPACE] && preKeys[DIK_SPACE]) {
 			isWipe = 1;
 		}
