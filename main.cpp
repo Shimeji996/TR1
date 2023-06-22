@@ -408,10 +408,10 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 
 	Vector3 kLocalVerticesAfter[4]{};
 
-	kLocalVerticesAfter[0] = { -320, 155, 0 };
-	kLocalVerticesAfter[1] = { 320, 155, 0 };
-	kLocalVerticesAfter[2] = { -320, -155, 0 };
-	kLocalVerticesAfter[3] = { 320, -155, 0 };
+	kLocalVerticesAfter[0] = { -220, 155, 0 };
+	kLocalVerticesAfter[1] = { 220, 155, 0 };
+	kLocalVerticesAfter[2] = { -220, -155, 0 };
+	kLocalVerticesAfter[3] = { 220, -155, 0 };
 
 
 	bool isDissolve = 0;
@@ -441,7 +441,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 
 	int redA = 0x00;
 	int greenA = 0x00;
-	int blueA = 0xFF;
+	int blueA = 0xAF;
 	int alphaA = startAlphaA;
 	unsigned colorA = GetColor(redA, greenA, blueA, alphaA);
 
