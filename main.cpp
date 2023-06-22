@@ -1,5 +1,5 @@
 #include <Novice.h>
-#include <Vector3.h>
+#include "Vector3.h"
 #include <cmath>
 #define _USE_MATH_DEFIENS
 #include <assert.h>
@@ -371,6 +371,10 @@ unsigned int GetColor(int red, int green, int blue, int alpha) {
 	return hex = red + green + blue + alpha;
 }
 
+void lerp(float start, float end, float& pos, float& t) {
+	pos = start + (end - start) * t;
+}
+
 // Windowsアプリでのエントリーポイント(main関数)
 int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 
@@ -381,8 +385,10 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	char keys[256] = { 0 };
 	char preKeys[256] = { 0 };
 
-	int textureH = Novice::LoadTexture("./Resource/white.png");
-	int color = RED;
+	int textureH = Novice::LoadTexture("./Resource/TR.png");
+	int textureR = Novice::LoadTexture("./Resource/white.png");
+	int color = WHITE;
+
 	Vector3 rotate = {};
 	Vector3 translate = {};
 	Vector3 scale = {};
@@ -390,14 +396,31 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	Vector3 cameraPosition = { 0,0,-1000 };
 
 	Vector3 kLocalVertices[4]{};
+	Vector3 kLocalVerticesReverse[4]{};
 
-	kLocalVertices[0] = { -640, 360, 0 };
-	kLocalVertices[1] = { 640, 360, 0 };
-	kLocalVertices[2] = { -640, -360, 0 };
-	kLocalVertices[3] = { 640, -360, 0 };
+	kLocalVertices[0] = { -320, 155, 0 };
+	kLocalVertices[1] = { 320, 155, 0 };
+	kLocalVertices[2] = { -320, -155, 0 };
+	kLocalVertices[3] = { 320, -155, 0 };
 
-	bool isScale = 0;
-	int ScaleTimer = 0;
+	Vector3 startTEntou = { 320, 155, 0 };
+	Vector3 endTEntou = { -320, 155, 0 };
+
+
+	kLocalVerticesReverse[0] = { -100, 60, 0 };
+	kLocalVerticesReverse[1] = { 100, 60, 0 };
+	kLocalVerticesReverse[2] = { -100, -60, 0 };
+	kLocalVerticesReverse[3] = { 100, -60, 0 };
+
+	Vector3 startRWHITE = { 100, 60, 0 };
+	Vector3 endRWHITE = { -320, 155, 0 };
+
+	Vector3 startLWHITE = { -100, 60, 0 };
+	Vector3 endLWHITE = { -320, 155, 0 };
+
+
+	float t = 0.0f;
+	bool isMove = 0;
 
 	// ウィンドウの×ボタンが押されるまでループ
 	while (Novice::ProcessMessage() == 0) {
@@ -412,38 +435,37 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 		/// ↓更新処理ここから
 		///
 
-		if (keys[DIK_SPACE] && !preKeys[DIK_SPACE]) {
-			isScale = 1;
+		const int move = 10;
+
+		if (keys[DIK_SPACE] && preKeys[DIK_SPACE]) {
+			isMove = 1;
 		}
 
-		if (isScale == 1) {
-			scale.x += 0.05;
-			scale.y += 0.05;
+		if (isMove == 1) {
+			t += 0.01f;
 		}
 
-		if (scale.x >= 1.0f) {
-			scale.x = 1.0f;
-			scale.y = scale.x;
-			ScaleTimer += 1;
+		if (t > 1.0f) {
+			isMove = false;
+			t = 1.0f;
 		}
 
-		if (ScaleTimer == 120) {
-			isScale = 0;
-			scale.x -= 0.05;
-			scale.y -= 0.05;
-		}
+		lerp(startTEntou.x, endTEntou.x, kLocalVertices[1].x, t);
+		lerp(startTEntou.x, endTEntou.x, kLocalVertices[3].x, t);
 
-		if (scale.x <= 0.0f) {
-			scale.x = 0.0f;
-			scale.y = scale.x;
-		}
+		lerp(startRWHITE.x, endRWHITE.x, kLocalVerticesReverse[1].x, t);
+		lerp(startRWHITE.x, endRWHITE.x, kLocalVerticesReverse[3].x, t);
+
+		lerp(startLWHITE.x, endLWHITE.x, kLocalVerticesReverse[0].x, t);
+		lerp(startLWHITE.x, endLWHITE.x, kLocalVerticesReverse[2].x, t);
+
 
 		Matrix4x4 cameraMatrix =
 			MakeAffineMatrix({ 1.0f,1.0f,1.0f }, { 0.0f,0.0f,0.0f }, cameraPosition);
 
 		Matrix4x4 viewMatrix = Inverse(cameraMatrix);
 
-		Matrix4x4 worldMatrix = MakeAffineMatrix(scale, rotate, translate);
+		Matrix4x4 worldMatrix = MakeAffineMatrix({ 1.0f,1.0f,1.0f }, rotate, translate);
 
 		Matrix4x4 projectionMatrix =
 			MakePerspectiveFovMatrix(0.45f, float(kWindowWidth) / float(kWindowHeight), 0.1f, 100.0f);
@@ -455,10 +477,16 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 			MakeViewportMatrix(0, 0, float(kWindowWidth), float(kWindowHeight), 0.0f, 1.0f);
 
 		Vector3 screenVerices[4];
+
+		Vector3 screenVerR[4];
 		for (uint32_t i = 0; i < 4; ++i)
 		{
 			Vector3 ndcVertex = Transform(kLocalVertices[i], worldViewPrjectionMatrix);
 			screenVerices[i] = Transform(ndcVertex, viewportMatrix);
+
+			Vector3 ndcVer2 = Transform(kLocalVerticesReverse[i], worldViewPrjectionMatrix);
+			screenVerR[i] = Transform(ndcVer2, viewportMatrix);
+
 		}
 
 		///
@@ -469,9 +497,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 		/// ↓描画処理ここから
 		///
 
-		if (ScaleTimer == 120) {
-			Novice::DrawEllipse(640, 360, 16, 16, 0.0f, 0xFFFFFFFF, kFillModeSolid);
-		}
+		Novice::DrawEllipse(640, 360, 16, 16, 0.0f, 0xFFFFFFFF, kFillModeSolid);
 
 		Novice::DrawQuad(
 			int(screenVerices[0].x), int(screenVerices[0].y),
@@ -479,11 +505,20 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 			int(screenVerices[2].x), int(screenVerices[2].y),
 			int(screenVerices[3].x), int(screenVerices[3].y),
 			0, 0,
-			1, 1,
+			1280, 720,
 			textureH, color
 		);
 
-		Novice::ScreenPrintf(0, 0, "%d", ScaleTimer);
+
+		Novice::DrawQuad(
+			int(screenVerR[0].x), int(screenVerR[0].y),
+			int(screenVerR[1].x), int(screenVerR[1].y),
+			int(screenVerR[2].x), int(screenVerR[2].y),
+			int(screenVerR[3].x), int(screenVerR[3].y),
+			0, 0,
+			1280, 720,
+			textureR, color
+		);
 
 		///
 		/// ↑描画処理ここまで
