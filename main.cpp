@@ -1,10 +1,9 @@
 #include <Novice.h>
-#define _USE_MATH_DEFIENS
+#include <Vector3.h>
 #include <cmath>
+#define _USE_MATH_DEFIENS
 #include <assert.h>
-#include <Matrix4x4.h>
-#include "Vector3.h"
-#include <ImGuiManager.h>
+#include "Matrix4x4.h"
 
 const char kWindowTitle[] = "LE2B_23_マスダリュウ";
 
@@ -382,82 +381,29 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	char keys[256] = { 0 };
 	char preKeys[256] = { 0 };
 
-	int textureH = Novice::LoadTexture("white1x1.png");
+	int textureH = Novice::LoadTexture("./Resource/white.png");
+	int color = RED;
 	Vector3 rotate = {};
 	Vector3 translate = {};
+	Vector3 scale = {};
 
 	Vector3 cameraPosition = { 0,0,-1000 };
 
-#pragma region 矩形A
-
 	Vector3 kLocalVertices[4]{};
-	Vector3 kLocalStartVertices[4]{};
-	Vector3 kLocalEndVertices[4]{};
 
-	// 矩形の4点座標
-	kLocalVertices[0] = { 640, 360, 0 };
-	kLocalVertices[1] = { 1280, 360, 0 };
-	kLocalVertices[2] = { 640, -360, 0 };
-	kLocalVertices[3] = { 1280, -360, 0 };
+	kLocalVertices[0] = { -320, 155, 0 };
+	kLocalVertices[1] = { 320, 155, 0 };
+	kLocalVertices[2] = { -320, -155, 0 };
+	kLocalVertices[3] = { 320, -155, 0 };
 
-	// 線形補間の始点
-	kLocalStartVertices[0] = { 0, 360, 0 };
-	kLocalStartVertices[1] = { 640, 360, 0 };
-	kLocalStartVertices[2] = { 0, -360, 0 };
-	kLocalStartVertices[3] = { 640, -360, 0 };
-
-	// 線形補完の終点
-	kLocalEndVertices[0] = { 640, 360, 0 };
-	kLocalEndVertices[1] = { 1280, 360, 0 };
-	kLocalEndVertices[2] = { 640, -360, 0 };
-	kLocalEndVertices[3] = { 1280, -360, 0 };
-
-#pragma endregion
-
-#pragma region 矩形B
-
-	Vector3 kLocalVerticesReverse[4]{};
-	Vector3 kLocalStartVerticesReverse[4]{};
-	Vector3 kLocalEndVerticesReverse[4]{};
-
-	// 矩形の4点座標
-	kLocalVerticesReverse[0] = { -1280, 360, 0 };
-	kLocalVerticesReverse[1] = { -640, 360, 0 };
-	kLocalVerticesReverse[2] = { -1280, -360, 0 };
-	kLocalVerticesReverse[3] = { -640, -360, 0 };
-
-	// 線形補間の始点
-	kLocalStartVerticesReverse[0] = { -640, 360, 0 };
-	kLocalStartVerticesReverse[1] = { 0, 360, 0 };
-	kLocalStartVerticesReverse[2] = { -640, -360, 0 };
-	kLocalStartVerticesReverse[3] = { 0, -360, 0 };
-
-	// 線形補完の終点
-	kLocalEndVerticesReverse[0] = { -1280, 360, 0 };
-	kLocalEndVerticesReverse[1] = { -640, 360, 0 };
-	kLocalEndVerticesReverse[2] = { -1280, -360, 0 };
-	kLocalEndVerticesReverse[3] = { -640, -360, 0 };
-
-#pragma endregion
-
-	// 線形補完の値
-	const float min = 0.0f;
-	const float max = 1.0f;
-	float t = 0;
-	float easedT = 0;
-
-	// 線形補完のフラグ
-	bool isClose = 0;
-	bool isOpen = 0;
-
-	int CloseTimer = 0;
+	bool isScale = 0;
+	bool isRotate = 0;
+	int ScaleTimer = 0;
 
 	int red = 0xFF;
 	int green = 0x00;
 	int blue = 0x00;
 	int alpha = 0xFF;
-	unsigned color = GetColor(red, green, blue, alpha);
-
 
 	// ウィンドウの×ボタンが押されるまでループ
 	while (Novice::ProcessMessage() == 0) {
@@ -472,81 +418,55 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 		/// ↓更新処理ここから
 		///
 
-		if (!isClose && !isOpen) {
-			if (keys[DIK_SPACE] && !preKeys[DIK_SPACE]) {
-				isClose = 1;
-			}
+		if (keys[DIK_SPACE] && !preKeys[DIK_SPACE]) {
+			isScale = 1;
+			isRotate = 1;
 		}
 
-		if (isClose == 1) {
+		if (rotate.y >= 3.14f) {
+			rotate.y = 3.14f;
+			if (alpha > 0x00) {
+				alpha--;
 
-			// 数値を増加
-			t += 0.01f;
-
-			// ｔの値が最大値以上であれば線形補完を停止
-			if (t >= max) {
-				t = max;
-				CloseTimer += 1;
-				if (CloseTimer == 120) {
-					isClose = false;
-					isOpen = true;
-				}
 			}
-
-			// イージングを行う
-			easedT = t * t;
-
-			// ｔの値に応じて座標を移動させる
-			for (uint32_t i = 0; i < 4; i++) {
-				kLocalVertices[i].x = (1.0f - easedT) * kLocalEndVertices[i].x + easedT * kLocalStartVertices[i].x;
-				kLocalVertices[i].y = (1.0f - easedT) * kLocalEndVertices[i].y + easedT * kLocalStartVertices[i].y;
+			else if (alpha <= 0x00) {
+				alpha = 0x00;
 			}
-
-			// ｔの値に応じて座標を移動させる
-			for (uint32_t i = 0; i < 4; i++) {
-				kLocalVerticesReverse[i].x = (1.0f - easedT) * kLocalEndVerticesReverse[i].x + easedT * kLocalStartVerticesReverse[i].x;
-				kLocalVerticesReverse[i].y = (1.0f - easedT) * kLocalEndVerticesReverse[i].y + easedT * kLocalStartVerticesReverse[i].y;
-			}
-
-
+			isRotate = 0;
 		}
 
-
-		if (isOpen == 1) {
-
-			// 数値を増加
-			t -= 0.01f;
-
-			// ｔの値が最大値以上であれば線形補完を停止
-			if (t <= min) {
-				t = min;
-				isOpen = false;
-			}
-
-			// イージングを行う
-			easedT = t * t;
-
-			// ｔの値に応じて座標を移動させる
-			for (uint32_t i = 0; i < 4; i++) {
-				kLocalVertices[i].x = (1.0f - easedT) * kLocalEndVertices[i].x + easedT * kLocalStartVertices[i].x;
-				kLocalVertices[i].y = (1.0f - easedT) * kLocalEndVertices[i].y + easedT * kLocalStartVertices[i].y;
-			}
-
-			// ｔの値に応じて座標を移動させる
-			for (uint32_t i = 0; i < 4; i++) {
-				kLocalVerticesReverse[i].x = (1.0f - easedT) * kLocalEndVerticesReverse[i].x + easedT * kLocalStartVerticesReverse[i].x;
-				kLocalVerticesReverse[i].y = (1.0f - easedT) * kLocalEndVerticesReverse[i].y + easedT * kLocalStartVerticesReverse[i].y;
-			}
-
+		if (isScale == 1) {
+			scale.x += 0.05;
+			scale.y += 0.05;
 		}
 
+		if (scale.x >= 1.0f) {
+			scale.x = 1.0f;
+			scale.y = scale.x;
+			ScaleTimer += 1;
+		}
+
+		if (ScaleTimer == 120) {
+			isScale = 0;
+			scale.x -= 0.05;
+			scale.y -= 0.05;
+		}
+
+		if (scale.x <= 0.0f) {
+			scale.x = 0.0f;
+			scale.y = scale.x;
+		}
+
+		if (isRotate == 1) {
+			rotate.y += 0.05f;
+		}
 
 		Matrix4x4 cameraMatrix =
 			MakeAffineMatrix({ 1.0f,1.0f,1.0f }, { 0.0f,0.0f,0.0f }, cameraPosition);
 
 		Matrix4x4 viewMatrix = Inverse(cameraMatrix);
 
-		Matrix4x4 worldMatrix = MakeAffineMatrix({ 1.0f,1.0f,1.0f }, rotate, translate);
+		Matrix4x4 worldMatrix = MakeAffineMatrix(scale, rotate, translate);
 
 		Matrix4x4 projectionMatrix =
 			MakePerspectiveFovMatrix(0.45f, float(kWindowWidth) / float(kWindowHeight), 0.1f, 100.0f);
@@ -564,15 +484,6 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 			screenVerices[i] = Transform(ndcVertex, viewportMatrix);
 		}
 
-		Vector3 screenVericesReverse[4];
-		for (uint32_t i = 0; i < 4; ++i)
-		{
-			Vector3 ndcVertex = Transform(kLocalVerticesReverse[i], worldViewPrjectionMatrix);
-			screenVericesReverse[i] = Transform(ndcVertex, viewportMatrix);
-		}
-
-		color = GetColor(red, green, blue, alpha);
-
 		///
 		/// ↑更新処理ここまで
 		///
@@ -581,7 +492,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 		/// ↓描画処理ここから
 		///
 
-		if (CloseTimer == 120) {
+		if (ScaleTimer == 120) {
 			Novice::DrawEllipse(640, 360, 16, 16, 0.0f, 0xFFFFFFFF, kFillModeSolid);
 		}
 
@@ -595,17 +506,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 			textureH, color
 		);
 
-		Novice::DrawQuad(
-			int(screenVericesReverse[0].x), int(screenVericesReverse[0].y),
-			int(screenVericesReverse[1].x), int(screenVericesReverse[1].y),
-			int(screenVericesReverse[2].x), int(screenVericesReverse[2].y),
-			int(screenVericesReverse[3].x), int(screenVericesReverse[3].y),
-			0, 0,
-			1, 1,
-			textureH, color
-		);
-
-		Novice::ScreenPrintf(0, 0, "%d", CloseTimer);
+		Novice::ScreenPrintf(0, 0, "%d", ScaleTimer);
 
 		///
 		/// ↑描画処理ここまで
