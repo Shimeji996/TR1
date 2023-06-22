@@ -1,4 +1,5 @@
 #include <Novice.h>
+#include <Vector3.h>
 #include <cmath>
 #define _USE_MATH_DEFIENS
 #include <assert.h>
@@ -370,12 +371,6 @@ unsigned int GetColor(int red, int green, int blue, int alpha) {
 	return hex = red + green + blue + alpha;
 }
 
-void lerp(int start, int end, int& pos, float& t) {
-	float a;
-	a = float(start) + float((end - start)) * t;
-	pos = int(a);
-}
-
 // Windowsアプリでのエントリーポイント(main関数)
 int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 
@@ -387,65 +382,22 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	char preKeys[256] = { 0 };
 
 	int textureH = Novice::LoadTexture("./Resource/white.png");
+	int color = RED;
 	Vector3 rotate = {};
 	Vector3 translate = {};
+	Vector3 scale = {};
 
 	Vector3 cameraPosition = { 0,0,-1000 };
 
 	Vector3 kLocalVertices[4]{};
 
-	kLocalVertices[0] = { -320, 155, 0 };
-	kLocalVertices[1] = { 320, 155, 0 };
-	kLocalVertices[2] = { -320, -155, 0 };
-	kLocalVertices[3] = { 320, -155, 0 };
+	kLocalVertices[0] = { -640, 360, 0 };
+	kLocalVertices[1] = { 640, 360, 0 };
+	kLocalVertices[2] = { -640, -360, 0 };
+	kLocalVertices[3] = { 640, -360, 0 };
 
-	Vector3 kLocalVerticesIn[4]{};
-
-	kLocalVerticesIn[0] = { -100, 60, 0 };
-	kLocalVerticesIn[1] = { 100, 60, 0 };
-	kLocalVerticesIn[2] = { -100, -60, 0 };
-	kLocalVerticesIn[3] = { 100, -60, 0 };
-
-	Vector3 kLocalVerticesAfter[4]{};
-
-	kLocalVerticesAfter[0] = { -320, 155, 0 };
-	kLocalVerticesAfter[1] = { 320, 155, 0 };
-	kLocalVerticesAfter[2] = { -320, -155, 0 };
-	kLocalVerticesAfter[3] = { 320, -155, 0 };
-
-
-	bool isDissolve = 0;
-
-	int red = 0xFF;
-	int green = 0x00;
-	int blue = 0x00;
-	int alpha = 0xFF;
-	unsigned color = GetColor(red, green, blue, alpha);
-
-	int startAlpha = 0xFF;
-	int endAlpha = 0x00;
-
-	int startAlpha2 = 0xFF;
-	int endAlpha2 = 0x00;
-
-
-	int red2 = 0x00;
-	int green2 = 0xFF;
-	int blue2 = 0x00;
-	int alpha2 = startAlpha2;
-	unsigned color2 = GetColor(red2, green2, blue2, alpha2);
-
-	int startAlphaA = 0x00;
-	int endAlphaA = 0xFF;
-
-
-	int redA = 0x00;
-	int greenA = 0x00;
-	int blueA = 0xFF;
-	int alphaA = startAlphaA;
-	unsigned colorA = GetColor(redA, greenA, blueA, alphaA);
-
-	float t = 0.0f;
+	bool isScale = 0;
+	int ScaleTimer = 0;
 
 	// ウィンドウの×ボタンが押されるまでループ
 	while (Novice::ProcessMessage() == 0) {
@@ -461,28 +413,37 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 		///
 
 		if (keys[DIK_SPACE] && !preKeys[DIK_SPACE]) {
-			isDissolve = 1;
+			isScale = 1;
 		}
 
-		if (t > 0.9f) {
-			isDissolve = false;
-			t = 1.0f;
+		if (isScale == 1) {
+			scale.x += 0.05;
+			scale.y += 0.05;
 		}
 
-		if (isDissolve == 1) {
-			t += 0.01f;
+		if (scale.x >= 1.0f) {
+			scale.x = 1.0f;
+			scale.y = scale.x;
+			ScaleTimer += 1;
 		}
 
-		lerp(startAlpha, endAlpha, alpha, t);
-		lerp(startAlpha2, endAlpha2, alpha2, t);
-		lerp(startAlphaA, endAlphaA, alphaA, t);
+		if (ScaleTimer == 120) {
+			isScale = 0;
+			scale.x -= 0.05;
+			scale.y -= 0.05;
+		}
+
+		if (scale.x <= 0.0f) {
+			scale.x = 0.0f;
+			scale.y = scale.x;
+		}
 
 		Matrix4x4 cameraMatrix =
 			MakeAffineMatrix({ 1.0f,1.0f,1.0f }, { 0.0f,0.0f,0.0f }, cameraPosition);
 
 		Matrix4x4 viewMatrix = Inverse(cameraMatrix);
 
-		Matrix4x4 worldMatrix = MakeAffineMatrix({ 1.0f,1.0f,1.0f }, rotate, translate);
+		Matrix4x4 worldMatrix = MakeAffineMatrix(scale, rotate, translate);
 
 		Matrix4x4 projectionMatrix =
 			MakePerspectiveFovMatrix(0.45f, float(kWindowWidth) / float(kWindowHeight), 0.1f, 100.0f);
@@ -493,26 +454,12 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 		Matrix4x4 viewportMatrix =
 			MakeViewportMatrix(0, 0, float(kWindowWidth), float(kWindowHeight), 0.0f, 1.0f);
 
-
 		Vector3 screenVerices[4];
-		Vector3 screenVerA[4];
-
-		Vector3 screenVerR[4];
 		for (uint32_t i = 0; i < 4; ++i)
 		{
 			Vector3 ndcVertex = Transform(kLocalVertices[i], worldViewPrjectionMatrix);
 			screenVerices[i] = Transform(ndcVertex, viewportMatrix);
-
-			Vector3 ndcVer2 = Transform(kLocalVerticesIn[i], worldViewPrjectionMatrix);
-			screenVerR[i] = Transform(ndcVer2, viewportMatrix);
-			Vector3 ndcVertexA = Transform(kLocalVerticesAfter[i], worldViewPrjectionMatrix);
-			screenVerA[i] = Transform(ndcVertexA, viewportMatrix);
-
-
 		}
-		color = GetColor(red, green, blue, alpha);
-		color2 = GetColor(red2, green2, blue2, alpha2);
-		colorA = GetColor(redA, greenA, blueA, alphaA);
 
 		///
 		/// ↑更新処理ここまで
@@ -522,7 +469,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 		/// ↓描画処理ここから
 		///
 
-		if (rotate.y >= 3.14) {
+		if (ScaleTimer == 120) {
 			Novice::DrawEllipse(640, 360, 16, 16, 0.0f, 0xFFFFFFFF, kFillModeSolid);
 		}
 
@@ -536,25 +483,8 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 			textureH, color
 		);
 
-		Novice::DrawQuad(
-			int(screenVerR[0].x), int(screenVerR[0].y),
-			int(screenVerR[1].x), int(screenVerR[1].y),
-			int(screenVerR[2].x), int(screenVerR[2].y),
-			int(screenVerR[3].x), int(screenVerR[3].y),
-			0, 0,
-			1, 1,
-			textureH, color2
-		);
+		Novice::ScreenPrintf(0, 0, "%d", ScaleTimer);
 
-		Novice::DrawQuad(
-			int(screenVerA[0].x), int(screenVerA[0].y),
-			int(screenVerA[1].x), int(screenVerA[1].y),
-			int(screenVerA[2].x), int(screenVerA[2].y),
-			int(screenVerA[3].x), int(screenVerA[3].y),
-			0, 0,
-			1, 1,
-			textureH, colorA
-		);
 		///
 		/// ↑描画処理ここまで
 		///
