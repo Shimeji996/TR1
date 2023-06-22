@@ -420,7 +420,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 
 
 	float t = 0.0f;
-	bool isMove = 0;
+	bool isWipe = 0;
 
 	// ウィンドウの×ボタンが押されるまでループ
 	while (Novice::ProcessMessage() == 0) {
@@ -438,15 +438,15 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 		const int move = 10;
 
 		if (keys[DIK_SPACE] && preKeys[DIK_SPACE]) {
-			isMove = 1;
+			isWipe = 1;
 		}
 
-		if (isMove == 1) {
+		if (isWipe == 1) {
 			t += 0.01f;
 		}
 
 		if (t > 1.0f) {
-			isMove = false;
+			isWipe = false;
 			t = 1.0f;
 		}
 
