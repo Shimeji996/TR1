@@ -64,6 +64,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	};
 	//イージング　ここまで
 
+	bool isEasing = 0;
 
 	// ウィンドウの×ボタンが押されるまでループ
 	while (Novice::ProcessMessage() == 0) {
@@ -78,7 +79,13 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 		/// ↓更新処理ここから
 		///
 
-		easeInOutElasticMoveX(ease, title);
+		if (keys[DIK_SPACE] && preKeys[DIK_SPACE]) {
+			isEasing = 1;
+		}
+
+		if (isEasing == 1) {
+			easeInOutElasticMoveX(ease, title);
+		}
 
 		///
 		/// ↑更新処理ここまで
