@@ -408,10 +408,10 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 
 	Vector3 kLocalVerticesAfter[4]{};
 
-	kLocalVerticesAfter[0] = { -220, 155, 0 };
-	kLocalVerticesAfter[1] = { 220, 155, 0 };
-	kLocalVerticesAfter[2] = { -220, -155, 0 };
-	kLocalVerticesAfter[3] = { 220, -155, 0 };
+	kLocalVerticesAfter[0] = { -200, 155, 0 };
+	kLocalVerticesAfter[1] = { 200, 155, 0 };
+	kLocalVerticesAfter[2] = { -200, -155, 0 };
+	kLocalVerticesAfter[3] = { 200, -155, 0 };
 
 
 	bool isDissolve = 0;
